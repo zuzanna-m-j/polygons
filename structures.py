@@ -6,16 +6,12 @@ def onSegment(p, q, r):
             (q[1] <= max(p[1], r[1])) and (q[1] >= min(p[1], r[1]))):
         return True
     return False
-
 def orientation(p, q, r):
     # to find the orientation of an ordered triplet (p,q,r)
     # function returns the following values:
     # 0 : Colinear points
     # 1 : Clockwise points
     # 2 : Counterclockwise
-
-    # See https://www.geeksforgeeks.org/orientation-3-ordered-points/amp/
-    # for details of below formula.
 
     val = (float(q[1] - p[1]) * (r[0] - q[0])) - (float(q[0] - p[0]) * (r[1] - q[1]))
     if (val > 0):
@@ -30,8 +26,6 @@ def orientation(p, q, r):
 
         # Colinear orientation
         return 0
-
-
 # The main function that returns true if
 # the line segment 'p1q1' and 'p2q2' intersect.
 def Intersection(p1, q1, p2, q2):
@@ -66,8 +60,6 @@ def Intersection(p1, q1, p2, q2):
 
     # If none of the cases
     return False
-
-
 def OverlapFound(obj1,obj2):
 
     #FLAG = False -- no overlap found
@@ -85,8 +77,7 @@ def OverlapFound(obj1,obj2):
 
 class Settings():
 
-    def __init__(self,dt,steps,num_species,D):
-
+    def __init__(self,dt = 1,steps = 1,num_species = 1,D = 0.5):
 
         self.num_species = num_species
         self.dt = dt
@@ -106,7 +97,15 @@ class Box():
         self.n = n
         self.bc = bc
 
-class Methods():
+class Shapes():
+
+    id_list = []
+
+    def VLen(self,v1,v2):
+        return np.sqrt((v2[0] - v1[0])**2 + (v2[1] - v1[1])**2)
+
+    def Vector(self,v1,v2):
+        return (v2[0] - v1[0],v2[1] - v1[1])
 
     def OverlapCheck(self,o1,o2):
 
@@ -116,13 +115,10 @@ class Methods():
         s1 = o1.vectors
         s2 = o2.vectors
 
-class Shapes():
-
-    def VLen(self,v1,v2):
-        return np.sqrt((v2[0] - v1[0])**2 + (v2[1] - v1[1])**2)
-
-    def Vector(self,v1,v2):
-        return (v2[0] - v1[0],v2[1] - v1[1])
+    def AddToList(self):
+        Shapes.id_list.append(self)
+    def GlobalId(self):
+        return len(Shapes.id_list)
 
 class Triangle(Shapes):
 
@@ -160,9 +156,9 @@ class Triangle(Shapes):
 
     def EndPoints(self):
 
-        v1 = self.v1
-        v2 = self.v2
-        v3 = self.v3
+        v1 = self.temp_v1
+        v2 = self.temp_v2
+        v3 = self.temp_v3
 
         a = (v1,v2)
         b = (v2,v3)
@@ -203,31 +199,59 @@ class Triangle(Shapes):
         r = np.sqrt(bx**2 + by**2 - 4*a*c)/(2*abs(a))
 
         return x,y,r
+    def MakeMove(self,config):
 
-    def __init__(self,vertices):
+        D = config.D[self.species]
+        #neighbours = self.neighbours
 
+        rng = np.random.default_rng(12345)
+        x,y = (rng.random(2) * 2 - 1)*D
+
+        self.temp_v1 = self.temp_v1[0] + x, self.temp_v1[1] + y
+        self.temp_v2 = self.temp_v2[0] + x, self.temp_v2[1] + y
+        self.temp_v3 = self.temp_v3[0] + x, self.temp_v3[1] + y
+
+        self.endpoints = self.EndPoints()
+
+        reject = OverlapFound(self,Shapes.id_list[1])
+        if reject  == True:
+
+            #reverse the temporary coordinates
+            self.temp_v1 = self.v1
+            self.temp_v2 = self.v2
+            self.temp_v3 = self.v3
+
+        else:
+
+            #update coordinates
+            #shift the circle center
+            #build neighbour list
+
+            self.v1 = self.temp_v1
+            self.v2 = self.temp_v2
+            self.v3 = self.temp_v3
+
+            self.x, self.y, self.r  = self.Circumcircle()
+            self.vertices = self.v1,self.v2,self.v3
+
+    def __init__(self,vertices,species):
+
+        self.species = species
         self.vertices = vertices
         self.v1 = vertices[0]
         self.v2 = vertices[1]
         self.v3 = vertices[2]
+
+        self.temp_v1 = vertices[0]
+        self.temp_v2 = vertices[1]
+        self.temp_v3 = vertices[2]
 
         self.a, self.b, self.c = self.Sides()
         self.x, self.y, self.r = self.Circumcircle()
         self.endpoints = self.EndPoints()
 
         #Increase total counters
+        self.global_id = self.GlobalId()
+        self.AddToList()
         self.area = self.Area()
         self.Update_Area()
-
-
-#test code
-
-t1 = Triangle([(-1,0),(2,0),(0,3)])
-t2 = Triangle([(0,0),(4,0),(2,3)])
-
-for p in t1.vertices:
-    plt.plot(p[0],p[1],'bo--')
-for p in t2.vertices:
-    plt.plot(p[0],p[1],'ro--')
-plt.show()
-print(OverlapFound(t1,t2))
