@@ -1,6 +1,6 @@
 from structures import *
 
-ConfigFile = Settings(D = 10.0)
+ConfigFile = Settings(D = 5.0,seed = 11112)
 
 t1 = Triangle([(-1,0),(2,0),(0,3)],0)
 t2 = Triangle([(0,0),(4,0),(2,3)],0)

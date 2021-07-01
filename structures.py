@@ -77,11 +77,12 @@ def OverlapFound(obj1,obj2):
 
 class Settings():
 
-    def __init__(self,dt = 1,steps = 1,num_species = 1,D = 0.5):
+    def __init__(self,dt = 1,steps = 1,num_species = 1,D = 0.5,seed = 12345):
 
         self.num_species = num_species
         self.dt = dt
         self.steps = steps
+        self.seed = seed
 
         if type(D) == float:
             self.D = num_species * [D]
@@ -204,7 +205,7 @@ class Triangle(Shapes):
         D = config.D[self.species]
         #neighbours = self.neighbours
 
-        rng = np.random.default_rng(12345)
+        rng = np.random.default_rng(config.seed)
         x,y = (rng.random(2) * 2 - 1)*D
 
         self.temp_v1 = self.temp_v1[0] + x, self.temp_v1[1] + y
