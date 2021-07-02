@@ -154,6 +154,13 @@ class Shapes():
 
     def Vector(self,v1,v2):
         return (v2[0] - v1[0],v2[1] - v1[1])
+    def GetNeighs(self,obj):
+
+        p = obj.gridpoint
+        neighs = ((p-1)%(obj.box.ncol*10),(p+1)%(obj.box.ncol*10),(p+10)%(obj.box.nrow*10),(p-10)%(obj.box.nrow*10),
+        ((p - 1) % (obj.box.ncol * 10) + 10)%(obj.box.nrow*10), ((p - 1) % (obj.box.ncol * 10) - 10)%(obj.box.nrow*10),
+        ((p + 1) % (obj.box.ncol * 10) + 10) % (obj.box.nrow * 10),((p + 1) % (obj.box.ncol * 10) - 10)%(obj.box.nrow*10))
+        return neighs
 
     def OverlapCheck(self,o1,o2):
 
@@ -281,8 +288,12 @@ class Triangle(Shapes):
 
             self.x, self.y, self.r  = self.Circumcircle()
             self.vertices = self.v1,self.v2,self.v3
+            self.gridpoint = Box.FindPoint(self.box,self.x,self.y)
+            self.neighs = Shapes.GetNeighs(self,self)
 
     def __init__(self,vertices,species,box):
+
+        self.box = box
 
         self.species = species
         self.vertices = vertices
@@ -298,6 +309,7 @@ class Triangle(Shapes):
         self.x, self.y, self.r = self.Circumcircle()
         self.endpoints = self.EndPoints()
         self.gridpoint = Box.FindPoint(box,self.x,self.y)
+        self.neighs = Shapes.GetNeighs(self,self)
 
         #Increase total counters
         self.global_id = self.GlobalId()
