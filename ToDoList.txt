@@ -1,5 +1,0 @@
- - change the input to the config file to a file name and then read in the parameters
-
- - create grid function and neighbour lists (kinda like the Ising Model)
-
- - boundary conditions
