@@ -91,36 +91,35 @@ class Settings():
 
 class Box():
 
-    def FindPoint(self, obj):
+    def FindPoint(self, x, y):
         """Finds the location of the point on the grid"""
-        x, y = obj.x, obj.y
 
         row = int(self.nrow / 2)
         col = int(self.ncol / 2)
 
-        if x < self.grid[0, col, 1]:
-            while x < self.grid[0, col, 1]:
+        if x < self.grid[0, col][1]:
+            while x < self.grid[0, col][1]:
                 col -= 1
             cid = col
-        elif x > self.grid[0, col, 2]:
-            while x > self.grid[0, col, 2]:
+        elif x > self.grid[0, col][2]:
+            while x > self.grid[0, col][2]:
                 col += 1
             cid = col
         else:
             cid = col
 
-        if y < self.grid[row, 0, 3]:
-            while y < self.grid[row, 0, 3]:
+        if y < self.grid[row, 0][3]:
+            while y < self.grid[row, 0][3]:
                 row -= 1
             rid = row
-        elif x > self.grid[row, 0, 4]:
-            while x > self.grid[row, 0, 4]:
+        elif x > self.grid[row, 0][4]:
+            while x > self.grid[row, 0][4]:
                 row += 1
             rid = row
         else:
             rid = row
 
-        return self.grid[rid, cid, 0]
+        return self.grid[rid, cid][0]
 
 
     def MakeGrid(self):
@@ -130,7 +129,7 @@ class Box():
             for j in range(self.ncol):
                 grid[i, j] = (id, self.dx * j, self.dx * (j + 1), self.dy * i, self.dy * (i + 1))
                 id += 1
-        print(grid)
+        return grid
 
     def __init__(self, x = 10, y = 10, nrow =10, ncol = 10,bc = "perdiodic"):
 
@@ -283,7 +282,7 @@ class Triangle(Shapes):
             self.x, self.y, self.r  = self.Circumcircle()
             self.vertices = self.v1,self.v2,self.v3
 
-    def __init__(self,vertices,species):
+    def __init__(self,vertices,species,box):
 
         self.species = species
         self.vertices = vertices
@@ -298,10 +297,24 @@ class Triangle(Shapes):
         self.a, self.b, self.c = self.Sides()
         self.x, self.y, self.r = self.Circumcircle()
         self.endpoints = self.EndPoints()
-        self.gridpoint = Box.FindPoint()
+        self.gridpoint = Box.FindPoint(box,self.x,self.y)
 
         #Increase total counters
         self.global_id = self.GlobalId()
         self.AddToList()
         self.area = self.Area()
         self.Update_Area()
+
+        from structures import *
+
+        ConfigFile = Settings(D=5.0, seed=11112)
+
+        t1 = Triangle([(-1, 0), (2, 0), (0, 3)], 0)
+        t2 = Triangle([(0, 0), (4, 0), (2, 3)], 0)
+        t1.MakeMove(ConfigFile)
+        for p in t1.vertices:
+            plt.plot(p[0], p[1], 'bo')
+        for p in t2.vertices:
+            plt.plot(p[0], p[1], 'ro')
+        plt.show()
+        print(OverlapFound(t1, t2))
