@@ -11,3 +11,4 @@ for p in t2.vertices:
     plt.plot(p[0],p[1],'ro')
 plt.show()
 print(OverlapFound(t1,t2))
+box = Box()

@@ -74,7 +74,6 @@ def OverlapFound(obj1,obj2):
                     break
     return FLAG
 
-
 class Settings():
 
     def __init__(self,dt = 1,steps = 1,num_species = 1,D = 0.5,seed = 12345):
@@ -92,11 +91,60 @@ class Settings():
 
 class Box():
 
-    def __init__(self,m,n,bc):
+    def FindPoint(self, obj):
+        """Finds the location of the point on the grid"""
+        x, y = obj.x, obj.y
 
-        self.m = m
-        self.n = n
+        row = int(self.nrow / 2)
+        col = int(self.ncol / 2)
+
+        if x < self.grid[0, col, 1]:
+            while x < self.grid[0, col, 1]:
+                col -= 1
+            cid = col
+        elif x > self.grid[0, col, 2]:
+            while x > self.grid[0, col, 2]:
+                col += 1
+            cid = col
+        else:
+            cid = col
+
+        if y < self.grid[row, 0, 3]:
+            while y < self.grid[row, 0, 3]:
+                row -= 1
+            rid = row
+        elif x > self.grid[row, 0, 4]:
+            while x > self.grid[row, 0, 4]:
+                row += 1
+            rid = row
+        else:
+            rid = row
+
+        return self.grid[rid, cid, 0]
+
+
+    def MakeGrid(self):
+        id = 0
+        grid = np.empty((self.nrow, self.ncol),dtype=object)
+        for i in range(self.nrow):
+            for j in range(self.ncol):
+                grid[i, j] = (id, self.dx * j, self.dx * (j + 1), self.dy * i, self.dy * (i + 1))
+                id += 1
+        print(grid)
+
+    def __init__(self, x = 10, y = 10, nrow =10, ncol = 10,bc = "perdiodic"):
+
+        self.x = x
+        self.y = y
+        self.nrow = nrow
+        self.ncol = ncol
         self.bc = bc
+
+        self.dx = self.x/self.nrow
+        self.dy = self.y/self.ncol
+        self.grid = self.MakeGrid()
+
+
 
 class Shapes():
 
@@ -250,6 +298,7 @@ class Triangle(Shapes):
         self.a, self.b, self.c = self.Sides()
         self.x, self.y, self.r = self.Circumcircle()
         self.endpoints = self.EndPoints()
+        self.gridpoint = Box.FindPoint()
 
         #Increase total counters
         self.global_id = self.GlobalId()
