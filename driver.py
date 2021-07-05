@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-from base import*
 
+
+from base import*
 if __name__ == "__main__":
     print("Executing driver code")
     print('----------------------')
@@ -9,6 +10,8 @@ if __name__ == "__main__":
     print(f'Number of types: {box.types}')
     print(f'Shapes: {box.shapes}')
     print(f'Shape areas:')
+
+
     for t,s,a in zip(range(box.types),box.shapes,box.type_areas):
         print(f'Type: {t}, shape: {s}, area: {a}.')
 
@@ -17,7 +20,9 @@ if __name__ == "__main__":
         st = 0
         for n in range(s):
             x, y = v[st:st+2]
+            p, q = v[st-2],v[st-1]
             st += 2
             plt.plot(x,y,'o',label = n)
+            plt.plot((x,p),(y,q), '--',color = 'dodgerblue')
         plt.legend()
         plt.show()
