@@ -9,11 +9,23 @@ import matplotlib.pyplot as plt
 
 # Classes:
 # - Structure
-# - Shapes
+
+# - Shape --:
+#           |- Triangle
+#           |- Qadrilateral
 
 # Structure - stores configuration of the running script
 
 class Structure():
+
+    def AREA(self,type):
+        vnum = self.shapes(type)
+
+        if vnum == 3:
+            return self.TRIANGLE_AREA(type)
+
+        elif vnum == 4:
+            return self.QUADR_AREA(type)
 
     def __init__(self,file_name):
 
@@ -59,7 +71,38 @@ class Structure():
                         offset += self.shapes[t]*2
                         self.vertices.append(shape_vertices)
 
-        print(self.vertices)
-        print(self.types)
+
+
+        #number of polygon of each type
+        self.type_numbers = np.zeros(self.types)
+
+        #area of each polygon
+        self.type_areas = np.zeros(self.types)
+        for i in range(len(self.type_areas)):
+            self.type_areas[i] = self.AREA()
+
+        #packing fraction
+        self.packing_fraction = 0
+
+
+class Shape():
+    """General class defining shared shape methods.
+
+    Methods:
+        - CREATE - initializes the shape
+        - INTERSECTION - checks if the two shapes intersect
+        - ENDPOINTS
+        - ADD_NUMBER - increases the count for the given shape
+        - INCREASE_AREA - adds to the occupied area
+
+    Variables:
+        - circle_center - center of the circumcirle
+        - area - stores the area of the polygon
+        - vertices - stores positions of the vertices of the polygon
+    """
+    # Methods
+    # Update the simulation environment
+
+    self.
 
 box = Structure("input.txt")
