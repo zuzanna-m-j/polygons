@@ -5,9 +5,11 @@
 
 # Imports
 import copy
-
 import numpy as np
 import matplotlib.pyplot as plt
+
+def help(str):
+    print(str)
 
 # Classes:
 # - Structure
@@ -23,37 +25,44 @@ class Structure():
     def VLEN(self,x1,y1,x2,y2):
         return np.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1))
 
-    def TRIANGLE_AREA(self,type):
+    def TRI_AREA(self,type):
 
-        v_list = self.vertices[type]
-        AB = self.VLEN(v_list[:4])
-        BC = self.VLEN(v_list[4:8])
-        CA = self.VLEN(v_list[8:])
+        v_list = np.array(self.vertices[type])
+        print(v_list)
+        AB = self.VLEN(*v_list[:4])
+        BC = self.VLEN(*v_list[2:6])
+        CA = self.VLEN(*v_list[np.array([4,5,0,1])])
 
         # calculate the area using Heron's formula
-        s = 0.5 * (s1 + s2 +s3)
+        s = 0.5 * (AB + BC + CA)
+        help(np.sqrt(s * (s - AB) * (s - BC) * (s - CA)))
         return np.sqrt(s * (s - AB) * (s - BC) * (s - CA))
 
     def QUAD_AREA(self,type):
 
-        v_list = self.vertices[type]
-        AB = self.VLEN(v_list[:4])
-        BC = self.VLEN(v_list[4:8])
-        CD = self.VLEN(v_list[8:12])
-        DA = self.VLEN(v_list[12:])
+        v_list = np.array(self.vertices[type])
+        AB = self.VLEN(*v_list[:4])
+        BC = self.VLEN(*v_list[2:6])
+        CD = self.VLEN(*v_list[4:8])
+        DA = self.VLEN(*v_list[np.array([6,7,0,1])])
 
+        s = 0.5 * (AB + BC + CD + DA)
+        help(np.sqrt((s - AB) * (s - BC) * (s - CD)*(s - DA)))
+        return np.sqrt((s - AB) * (s - BC) * (s - CD)*(s - DA))
 
     def AREA(self,type):
-        vnum = self.shapes(type)
 
+        vnum = self.shapes[type]
         if vnum == 3:
             return self.TRI_AREA(type)
-
         elif vnum == 4:
             return self.QUAD_AREA(type)
+        else:
+            print("Nope!")
 
     def __init__(self,file_name):
 
+        self.input_file = file_name
         with open(file_name,"r") as file:
             lines = file.readlines()
 
@@ -99,14 +108,13 @@ class Structure():
                         self.vertices.append(copy.deepcopy(shape_vertices))
 
 
-
         #number of polygon of each type
         self.type_numbers = np.zeros(self.types)
 
         #area of each polygon
         self.type_areas = np.zeros(self.types)
-        #for i in range(len(self.type_areas)):
-        #    self.type_areas[i] = self.AREA()
+        for i in range(len(self.type_areas)):
+            self.type_areas[i] = self.AREA(i)
 
         #packing fraction
         self.packing_fraction = 0
@@ -129,7 +137,3 @@ class Shape():
     """
     # Methods
     # Update the simulation environment
-
-
-box = Structure("input.txt")
-print(box.vertices)
