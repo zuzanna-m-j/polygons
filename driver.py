@@ -11,4 +11,13 @@ if __name__ == "__main__":
     print(f'Shape areas:')
     for t,s,a in zip(range(box.types),box.shapes,box.type_areas):
         print(f'Type: {t}, shape: {s}, area: {a}.')
-    print(box.AREA(1))
+
+    for i,s in enumerate(box.shapes):
+        v = np.array(box.vertices[i])
+        st = 0
+        for n in range(s):
+            x, y = v[st:st+2]
+            st += 2
+            plt.plot(x,y,'o',label = n)
+        plt.legend()
+        plt.show()
