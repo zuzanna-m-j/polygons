@@ -8,9 +8,6 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 
-def help(str):
-    print(str)
-
 # Classes:
 # - Structure
 
@@ -20,7 +17,23 @@ def help(str):
 
 # Structure - stores configuration of the running script
 
+
+
 class Structure():
+
+    """
+    Attributes:
+        - x: x dimension
+        - y: y dimension
+        - types: number of types
+        - shapes: shapes corresponding to given type
+        - vertices: vertices for base of each shape
+        - areas: area occupied by each type
+
+    Methods:
+        -
+
+    """
 
     def CAPTURED(self,a,b,c):
 
@@ -73,6 +86,10 @@ class Structure():
             return False
 
 
+
+
+
+
     def VLEN(self,x1,y1,x2,y2):
         return np.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1))
 
@@ -111,7 +128,18 @@ class Structure():
         else:
             print("Nope!")
 
+
+
+
+
+
+
+
+
+
     def __init__(self,file_name):
+
+        self.global_id_list = []
 
         self.input_file = file_name
         with open(file_name,"r") as file:
@@ -158,7 +186,6 @@ class Structure():
                         offset += self.shapes[n]*2
                         self.vertices.append(copy.deepcopy(shape_vertices))
 
-
         #number of polygon of each type
         self.type_numbers = np.zeros(self.types)
 
@@ -171,6 +198,10 @@ class Structure():
         self.packing_fraction = 0
 
 
+
+
+
+
 class Shape():
     """General class defining shared shape methods.
 
@@ -180,11 +211,121 @@ class Shape():
         - ENDPOINTS
         - ADD_NUMBER - increases the count for the given shape
         - INCREASE_AREA - adds to the occupied area
+        - MOVE - attempts to move the shape
 
-    Variables:
+    Attributes:
         - circle_center - center of the circumcirle
         - area - stores the area of the polygon
         - vertices - stores positions of the vertices of the polygon
     """
     # Methods
     # Update the simulation environment
+
+
+    def GET_NEIGHBOURS(self):
+        """Returns the list of particles neighbours"""
+        pass
+
+    def GET_GRID_POSITION(self):
+        pass
+
+    def ATTEMPT_MOVE(self,box):
+
+        # generate displacement vector -- change temporary coordinates
+        # if accepted update globals
+        # else do nothing
+
+        """Attempts to move the shape:
+        - randomly select one shape and move its coordinates
+        - check for overlaps
+         * performs either MC or SWAP move
+
+         p:     probability of attempting the SWAP move [box.p]
+         1 - p: probability of MC move
+         D:     species diffusivity (from input file)
+         """
+        # move parameters
+        p = box.p
+        D = box.D
+        t = box.types
+
+
+
+        # new neighbour list
+
+    def EDGES(self):
+
+        """
+        Constructs vertex set for each edge
+        """
+        shape = self.shape
+
+        if shape == 3:
+
+            AB = self.vertices[0,1,2,3]
+            BC = self.vertices[2,3,4,5]
+            CA = self.vertices[4,5,0,1]
+
+            return (AB,BC,CA)
+
+
+        elif shape == 4:
+
+            AB = self.vertices[0,1,2,3]
+            BC = self.vertices[2,3,4,5]
+            CD = self.vertices[4,5,6,7]
+            DA = self.vertices[6,7,0,1]
+
+            return (AB,BC,CD,DA)
+
+    def APPEND_GLOBAL_ID_LIST(self):
+        self.box.global_id_list.append(self)
+
+    def ACCEPT_MOVE(self):
+
+        # generate neighbour list
+        # from the position on the grid find the proximal squares
+        # from each square get the global id of shapes there
+        # append the pointers to the neighbour list
+        # check if crosses with any neighbour
+
+        # iterate all neighbours
+
+        for n in self.neighbours:
+
+            # for each edge in the original shape
+            for edge1 in self.edges:
+                p1 = edge1[:2]
+                p2 = edge1[2:4]
+
+                # for each edge in the neighbour
+                for edge2 in n.edges:
+                    q1 = edge2[:2]
+                    q2 = edge2[2:4]
+
+                    if self.box.CROSS(p1, p2, q1, q2) == True:
+                        # do not approve move
+                        return False
+
+        # approve move if no overlap found
+        return True
+
+    def __init__(self,box,type):
+
+        self.box = box
+
+        self.global_id = len(box.global_id_list)
+        self.APPEND_GLOBAL_ID_LIST(self)
+
+        self.type = type
+        self.shape = box.shapes[type]
+
+        self.vertices = self.CREATE(box,type)
+        self.temp_vertices = copy.deepcopy(self.vertices)
+
+        self.edges = self.EDGES(self.shape)
+        self.temp_edges = copy.deepcopy(self.edges)
+
+
+
+
