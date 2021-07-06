@@ -22,6 +22,57 @@ def help(str):
 
 class Structure():
 
+    def CAPTURED(self,a,b,c):
+
+        #c an c be on the line a---b
+        x1, y1 = a
+        x2, y2 = b
+        x3, y3 = c
+
+        if x3 >= min(x1,x2) and x3 <= max(x1,x2) and y3 >= min(y1,y2) and y3 <= max(y1,y2):
+            return True
+        else:
+            return False
+
+    def ORIENTATION(self,a,b,c):
+
+        x1, y1 = a
+        x2, y2 = b
+        x3, y3 = c
+
+        expr = (y2 - y1)*(x3 - x2) - (y3 - y2)*(x2 - x1)
+        if expr > 0:
+            return 1
+        if expr < 0:
+            return -1
+        if expr == 0:
+            return 0
+
+    def CROSS(self,p1,p2,q1,q2):
+
+        o1 = self.ORIENTATION(p1, p2, q1)
+        o2 = self.ORIENTATION(p1, p2, q2)
+        o3 = self.ORIENTATION(q1, q2, p1)
+        o4 = self.ORIENTATION(q1, q2, p2)
+
+        if ((o1 != o2) and (o3 != o4)):
+            return True
+
+        if ((o1 == 0) and self.CAPTURED(p1, p2, q1)):
+            return True
+
+        if (o2 == 0) and self.CAPTURED(p1, p2, q2):
+            return True
+
+        if (o3 == 0) and self.CAPTURED(q1, q2, p1):
+            return True
+
+        if (o4 == 0) and self.CAPTURED(q1, q2, p2):
+            return True
+        else:
+            return False
+
+
     def VLEN(self,x1,y1,x2,y2):
         return np.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1))
 

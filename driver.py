@@ -26,3 +26,8 @@ if __name__ == "__main__":
             plt.plot((x,p),(y,q), '--',color = 'dodgerblue')
         plt.legend()
         plt.show()
+
+
+    a,b,c,d = (0,0), (0,2), (-1,1), (2,1)
+    q = box.CROSS(a,b,c,d)
+    print(q)
