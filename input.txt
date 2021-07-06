@@ -1,3 +1,5 @@
 types 2
-shapes 3 4
-vertices 0 0 0 1 1 0, 0 0 1 0 1 1 0 1
+shapes 3 3
+vertices 0 0 0 1 1 0, 0 0 0 2 2 0
+x 10
+y 10

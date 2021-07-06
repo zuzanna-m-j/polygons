@@ -35,6 +35,51 @@ class Structure():
 
     """
 
+    def CIRCLE(self,shape,type):
+
+        # https://mathworld.wolfram.com/Circumcircle.html
+
+        if shape == 3:
+            v1 = self.vertices[type][0:2]
+            v2 = self.vertices[type][2:4]
+            v3 = self.vertices[type][4:6]
+
+            a = np.linalg.det(np.array([[v1[0], v1[1], 1],
+                                        [v2[0], v2[1], 1],
+                                        [v3[0], v3[1], 1]]))
+
+            bx = np.linalg.det(-1.0 * np.array([[v1[0] ** 2 + v1[1] ** 2, v1[1], 1],
+                                                [v2[0] ** 2 + v2[1] ** 2, v2[1], 1],
+                                                [v3[0] ** 2 + v3[1] ** 2, v3[1], 1]]))
+
+            by = np.linalg.det(np.array([[v1[0] ** 2 + v1[1] ** 2, v1[0], 1],
+                                         [v2[0] ** 2 + v2[1] ** 2, v2[0], 1],
+                                         [v3[0] ** 2 + v3[1] ** 2, v3[0], 1]]))
+
+            c = np.linalg.det(-1.0 * np.array([[v1[0] ** 2 + v1[1] ** 2, v1[0], v1[1]],
+                                               [v2[0] ** 2 + v2[1] ** 2, v2[0], v2[1]],
+                                               [v3[0] ** 2 + v3[1] ** 2, v3[0], v3[1]]]))
+
+            x = -1.0 * (bx / (2 * a))
+            y = -1.0 * (by / (2 * a))
+            r = np.sqrt(bx ** 2 + by ** 2 - 4 * a * c) / (2 * abs(a))
+
+            return r
+
+    def MAKE_BOX(self):
+
+        x_dim = self.x_dim
+        y_dim = self.y_dim
+
+        self.grid = np.zeros((x_dim,y_dim),dtype=object)
+
+        for i in range(x_dim):
+            for j in range(y_dim):
+                self.grid[i,j] = []
+
+
+
+
     def CAPTURED(self,a,b,c):
 
         #c an c be on the line a---b
@@ -85,11 +130,6 @@ class Structure():
         else:
             return False
 
-
-
-
-
-
     def VLEN(self,x1,y1,x2,y2):
         return np.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1))
 
@@ -103,7 +143,7 @@ class Structure():
 
         # calculate the area using Heron's formula
         s = 0.5 * (AB + BC + CA)
-        help(np.sqrt(s * (s - AB) * (s - BC) * (s - CA)))
+
         return np.sqrt(s * (s - AB) * (s - BC) * (s - CA))
 
     def QUAD_AREA(self,type):
@@ -115,7 +155,6 @@ class Structure():
         DA = self.VLEN(*v_list[np.array([6,7,0,1])])
 
         s = 0.5 * (AB + BC + CD + DA)
-        help(np.sqrt((s - AB) * (s - BC) * (s - CD)*(s - DA)))
         return np.sqrt((s - AB) * (s - BC) * (s - CD)*(s - DA))
 
     def AREA(self,type):
@@ -133,6 +172,7 @@ class Structure():
     def __init__(self,file_name):
 
         self.global_id_list = []
+        self.R = []
 
         self.input_file = file_name
         with open(file_name,"r") as file:
@@ -145,10 +185,10 @@ class Structure():
                     pass
 
                 elif input[0] == 'x':
-                    self.x = float(input[1])
+                    self.x_dim = int(input[1])
 
                 elif input[0] == 'y':
-                    self.y = float(input[1])
+                    self.y_dim = int(input[1])
 
                 elif input[0] == 'types':
                     self.types = int(input[1])
@@ -186,13 +226,14 @@ class Structure():
         self.type_areas = np.zeros(self.types)
         for i in range(len(self.type_areas)):
             self.type_areas[i] = self.AREA(i)
+            r = self.CIRCLE(self.shapes[i],i)
+            self.R.append(r)
 
         #packing fraction
         self.packing_fraction = 0
 
-
-
-
+        self.MAKE_BOX()
+        self.spacing = 2 * max(self.R)
 
 
 class Shape():
@@ -208,6 +249,57 @@ class Shape():
         - INCREASE_AREA - adds to the occupied area
         - MOVE - attempts to move the shape
     """
+
+    def ROTATE(self, x, y):
+
+        ox = self.temp_x
+        oy = self.temp_y
+
+        rnd = np.random()
+
+        theta = np.radians(rnd*360)
+
+        M = np.array([[1,1],[1,1]])
+
+        v = np.array([x - ox,y - oy])
+
+        nv= np.dot(M,v)
+        nv[0] += ox
+        nv[1] += oy
+        return nv[0],nv[1]
+
+    def CIRCLE(self):
+
+        # https://mathworld.wolfram.com/Circumcircle.html
+
+        if self.shape == 3:
+
+            v1 = self.vertices[0]
+            v2 = self.vertices[1]
+            v3 = self.vertices[2]
+
+            a = np.linalg.det(np.array([[v1[0], v1[1], 1],
+                                        [v2[0], v2[1], 1],
+                                        [v3[0], v3[1], 1]]))
+
+            bx = np.linalg.det(-1.0 * np.array([[v1[0] ** 2 + v1[1] ** 2, v1[1], 1],
+                                                [v2[0] ** 2 + v2[1] ** 2, v2[1], 1],
+                                                [v3[0] ** 2 + v3[1] ** 2, v3[1], 1]]))
+
+            by = np.linalg.det(np.array([[v1[0] ** 2 + v1[1] ** 2, v1[0], 1],
+                                         [v2[0] ** 2 + v2[1] ** 2, v2[0], 1],
+                                         [v3[0] ** 2 + v3[1] ** 2, v3[0], 1]]))
+
+            c = np.linalg.det(-1.0 * np.array([[v1[0] ** 2 + v1[1] ** 2, v1[0], v1[1]],
+                                               [v2[0] ** 2 + v2[1] ** 2, v2[0], v2[1]],
+                                               [v3[0] ** 2 + v3[1] ** 2, v3[0], v3[1]]]))
+
+            x = -1.0 * (bx / (2 * a))
+            y = -1.0 * (by / (2 * a))
+            r = np.sqrt(bx ** 2 + by ** 2 - 4 * a * c) / (2 * abs(a))
+
+            return x,y,r
+
 
     def APPEND_GLOBAL_ID_LIST(self):
         self.box.global_id_list.append(self)
@@ -254,9 +346,19 @@ class Shape():
 
         if move_type == 1:
             # make SWAP move
+            pass
 
         # 0 - DISPLACE
         # 1 - SWAP
+
+        if move_type == 2:
+            # rotate each vertex
+            for i in range(int(len(self.temp_vertices)/2)):
+                x = self.temp_vertices[i]
+                y = self.temp_vertices[i+1]
+                self.temp_vertices[i], self.temp_vertices[i+1] = copy.deepcopy(self.ROTATE(x,y))
+
+
 
         if self.ACCEPT_MOVE() == True:
 

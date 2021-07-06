@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# grid size is given in the units of the largest diameter
 
 
 from base import*
@@ -30,4 +31,4 @@ if __name__ == "__main__":
 
     a,b,c,d = (0,0), (0,2), (-1,1), (2,1)
     q = box.CROSS(a,b,c,d)
-    print(q)
+    print(box.spacing)
