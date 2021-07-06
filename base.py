@@ -130,13 +130,6 @@ class Structure():
 
 
 
-
-
-
-
-
-
-
     def __init__(self,file_name):
 
         self.global_id_list = []
@@ -203,6 +196,8 @@ class Structure():
 
 
 class Shape():
+
+
     """General class defining shared shape methods.
 
     Methods:
@@ -222,6 +217,9 @@ class Shape():
     # Update the simulation environment
 
 
+    def APPEND_GLOBAL_ID_LIST(self):
+        self.box.global_id_list.append(self)
+
     def GET_NEIGHBOURS(self):
         """Returns the list of particles neighbours"""
         pass
@@ -229,35 +227,36 @@ class Shape():
     def GET_GRID_POSITION(self):
         pass
 
-    def ATTEMPT_MOVE(self,box):
+    def ATTEMPT_MOVE(self):
 
-        # generate displacement vector -- change temporary coordinates
-        # if accepted update globals
-        # else do nothing
+        p = self.box.p
+        D = self.box.D[self.type]
+        moves = self.box.moves
+        move_type = random.choices(moves, weights = D, k = 1)
 
-        """Attempts to move the shape:
-        - randomly select one shape and move its coordinates
-        - check for overlaps
-         * performs either MC or SWAP move
+        # choose the kind of move to attempt
 
-         p:     probability of attempting the SWAP move [box.p]
-         1 - p: probability of MC move
-         D:     species diffusivity (from input file)
-         """
-        # move parameters
-        p = box.p
-        D = box.D
-        t = box.types
+        if move_type == 0:
 
+            # make a displacement move
+            # generate random displacement vector
+            # move all indices
+            # update circle coordinates
 
+        if move_type == 1:
+            # make SWAP move
 
-        # new neighbour list
+        # 0 - DISPLACE
+        # 1 - SWAP
+
+        if ACCEPT_MOVE() == True:
+
+            self.vertices = copy.deepcopy(self.temp_vertices)
+            self.x, self.y = self.temp_x, self.temp_y
+            self.
 
     def EDGES(self):
 
-        """
-        Constructs vertex set for each edge
-        """
         shape = self.shape
 
         if shape == 3:
@@ -277,9 +276,6 @@ class Shape():
             DA = self.vertices[6,7,0,1]
 
             return (AB,BC,CD,DA)
-
-    def APPEND_GLOBAL_ID_LIST(self):
-        self.box.global_id_list.append(self)
 
     def ACCEPT_MOVE(self):
 
@@ -325,6 +321,10 @@ class Shape():
 
         self.edges = self.EDGES(self.shape)
         self.temp_edges = copy.deepcopy(self.edges)
+
+        self.x, self.y, self.r = self.CIRCLE()
+        self.grid_position = self.GET_GRID_POSITION()
+        self.temp_grid_position = copy.deepcopy(self.grid_position)
 
 
 
