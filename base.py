@@ -207,15 +207,7 @@ class Shape():
         - ADD_NUMBER - increases the count for the given shape
         - INCREASE_AREA - adds to the occupied area
         - MOVE - attempts to move the shape
-
-    Attributes:
-        - circle_center - center of the circumcirle
-        - area - stores the area of the polygon
-        - vertices - stores positions of the vertices of the polygon
     """
-    # Methods
-    # Update the simulation environment
-
 
     def APPEND_GLOBAL_ID_LIST(self):
         self.box.global_id_list.append(self)
@@ -230,18 +222,35 @@ class Shape():
     def ATTEMPT_MOVE(self):
 
         p = self.box.p
-        D = self.box.D[self.type]
+        d = self.box.D[self.type]
         moves = self.box.moves
-        move_type = random.choices(moves, weights = D, k = 1)
+        move_type = random.choices(moves, weights = p, k = 1)
 
         # choose the kind of move to attempt
 
         if move_type == 0:
 
+            r = self.r
+            rnd1 = d * r * np.random()
+            rnd2 = d * r * np.random()
+
+            self.temp_vertices = copy.deepcopy(self.vertices)
+
+            for i in range(len(self.vertices)-1):
+                self.temp_vertices[i] += rnd1
+                self.temp_vertices[i+1] += rnd2
+
+            self.temp_x, self.temp_y, _ = self.CIRCLE()
+            self.temp_grid_position = self.GET_GRID_POSITION()
+            self.neighbours = self.GET_NEIGHBOURS()
+            self.temp_edges = self.EDGES()
+
             # make a displacement move
             # generate random displacement vector
             # move all indices
             # update circle coordinates
+
+
 
         if move_type == 1:
             # make SWAP move
@@ -249,11 +258,13 @@ class Shape():
         # 0 - DISPLACE
         # 1 - SWAP
 
-        if ACCEPT_MOVE() == True:
+        if self.ACCEPT_MOVE() == True:
 
             self.vertices = copy.deepcopy(self.temp_vertices)
-            self.x, self.y = self.temp_x, self.temp_y
-            self.
+            self.x, self.y = copy.deepcopy(self.temp_x, self.temp_y)
+            self.grid_position = copy.deepcopy(self.temp_grid_position)
+            self.edges = copy.deepcopy(self.temp_edges)
+
 
     def EDGES(self):
 
@@ -261,19 +272,19 @@ class Shape():
 
         if shape == 3:
 
-            AB = self.vertices[0,1,2,3]
-            BC = self.vertices[2,3,4,5]
-            CA = self.vertices[4,5,0,1]
+            AB = self.temp_vertices[0,1,2,3]
+            BC = self.temp_vertices[2,3,4,5]
+            CA = self.temp_vertices[4,5,0,1]
 
             return (AB,BC,CA)
 
 
         elif shape == 4:
 
-            AB = self.vertices[0,1,2,3]
-            BC = self.vertices[2,3,4,5]
-            CD = self.vertices[4,5,6,7]
-            DA = self.vertices[6,7,0,1]
+            AB = self.temp_vertices[0,1,2,3]
+            BC = self.temp_vertices[2,3,4,5]
+            CD = self.temp_vertices[4,5,6,7]
+            DA = self.temp_vertices[6,7,0,1]
 
             return (AB,BC,CD,DA)
 
@@ -290,7 +301,7 @@ class Shape():
         for n in self.neighbours:
 
             # for each edge in the original shape
-            for edge1 in self.edges:
+            for edge1 in self.temp_edges:
                 p1 = edge1[:2]
                 p2 = edge1[2:4]
 
