@@ -225,6 +225,7 @@ class Structure():
         self.R = []
         self.total_area = 0
         self.packing_fraction = 0
+        self.moves = (0,1)
 
         #area of each polygon
         self.type_areas = np.zeros(self.types)
