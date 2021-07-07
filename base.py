@@ -81,8 +81,6 @@ class Structure():
                 grid[i,j] = []
         return grid
 
-
-
     def CAPTURED(self,a,b,c):
 
         #c an c be on the line a---b
@@ -171,7 +169,6 @@ class Structure():
             print("Nope!")
 
 
-
     def __init__(self,file_name):
 
         self.input_file = file_name
@@ -256,9 +253,65 @@ class Shape():
     # updater functions
     def ADD_NUMBER(self):
         self.box.type_numbers[self.type] += 1
+
     def ADD_AREA(self):
         self.box.total_area += self.box.type_areas[self.type]
 
+    def UPDATE_GRID(self):
+
+        i, j, q = self.grid_position
+        m, n, _ = self.temp_grid_position
+        self.box.grid[i, j].pop(q)
+        self.box.grid[m, n].append(self.global_id)
+
+    def GET_GRID_POSITION(self, x, y):
+
+        i = (x // (self.grid.spacing)) % self.grid.x_dim
+        j = (y // (self.grid.spacing)) % self.grid.y_dim
+        q = len(self.grid[i, j])
+        return i, j, q
+
+    def APPEND_GLOBAL_ID_LIST(self):
+        self.box.global_id_list.append(self)
+
+    def GET_NEIGHBOURS(self):
+
+        x_dim = self.box.x_dim
+        y_dim = self.box.y_dim
+        i, j, _ = self.temp_grid_position
+        neighs = [
+
+            ((i+1)%x_dim,(j - 1) % y_dim),((i+1)%x_dim,j),((i+1)%x_dim,(j + 1) % y_dim),
+            (i,(j - 1) % y_dim), (i,(j + 1) % y_dim),
+            ((i-1)%x_dim,(j - 1) % y_dim),((i-1)%x_dim,j),((i-1)%x_dim,(j + 1) % y_dim)
+        ]
+        print(neighs)
+        return neighs
+
+
+
+
+    def GET_EDGES(self):
+
+        shape = self.shape
+        if shape == 3:
+
+            AB = self.temp_vertices[0,1,2,3]
+            BC = self.temp_vertices[2,3,4,5]
+            CA = self.temp_vertices[4,5,0,1]
+
+            return (AB,BC,CA)
+        elif shape == 4:
+
+            AB = self.temp_vertices[0,1,2,3]
+            BC = self.temp_vertices[2,3,4,5]
+            CD = self.temp_vertices[4,5,6,7]
+            DA = self.temp_vertices[6,7,0,1]
+
+            return (AB,BC,CD,DA)
+
+
+    # geometric functions
 
     def ROTATE(self, x, y):
 
@@ -306,26 +359,8 @@ class Shape():
 
             return x,y,r
 
-    def UPDATE_GRID(self):
 
-        i,j,q = self.grid_position
-        m,n,_ = self.temp_grid_position
-        self.box.grid[i,j].pop(q)
-        self.box.grid[m,n].append(self.global_id)
 
-    def GET_GRID_POSITION(self,x,y):
-
-        i = (x//(self.grid.spacing))%self.grid.x_dim
-        j = (y//(self.grid.spacing))%self.grid.y_dim
-        q = len(self.grid[i,j])
-        return i, j, q
-
-    def APPEND_GLOBAL_ID_LIST(self):
-        self.box.global_id_list.append(self)
-
-    def GET_NEIGHBOURS(self):
-        """Returns the list of particles neighbours"""
-        pass
 
     def ATTEMPT_MOVE(self):
 
@@ -375,7 +410,6 @@ class Shape():
                 self.temp_vertices[i], self.temp_vertices[i+1] = copy.deepcopy(self.ROTATE(x,y))
 
 
-
         if self.ACCEPT_MOVE() == True:
 
             self.vertices = copy.deepcopy(self.temp_vertices)
@@ -383,26 +417,13 @@ class Shape():
             self.UPDATE_GRID() # i, j, q
             self.grid_position = copy.deepcopy(self.temp_grid_position)
             self.edges = copy.deepcopy(self.temp_edges)
+            self.UPDATE_GRID(self)
+
+        else:
+            pass
 
 
-    def GET_EDGES(self):
 
-        shape = self.shape
-        if shape == 3:
-
-            AB = self.temp_vertices[0,1,2,3]
-            BC = self.temp_vertices[2,3,4,5]
-            CA = self.temp_vertices[4,5,0,1]
-
-            return (AB,BC,CA)
-        elif shape == 4:
-
-            AB = self.temp_vertices[0,1,2,3]
-            BC = self.temp_vertices[2,3,4,5]
-            CD = self.temp_vertices[4,5,6,7]
-            DA = self.temp_vertices[6,7,0,1]
-
-            return (AB,BC,CD,DA)
 
     def ACCEPT_MOVE(self):
 

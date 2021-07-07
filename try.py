@@ -34,3 +34,14 @@ j = (y//10)%5
 print(i,j)
 q = len(grid[i, j])
 
+x_dim = 6
+y_dim = 6
+i, j, = 0,2
+neighs = [
+
+    ((i + 1) % x_dim, (j - 1) % y_dim), ((i + 1) % x_dim, j), ((i + 1) % x_dim, (j + 1) % y_dim),
+    (i, (j - 1) % y_dim), (i, (j + 1) % y_dim),
+    ((i - 1) % x_dim, (j - 1) % y_dim), ((i - 1) % x_dim, j), ((i - 1) % x_dim, (j + 1) % y_dim)
+]
+print(neighs)
+
