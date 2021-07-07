@@ -5,6 +5,8 @@
 
 # Imports
 import copy
+import random
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -276,20 +278,25 @@ class Shape():
 
     def GET_NEIGHBOURS(self):
 
+        neigh_id_list = []
+
         x_dim = self.box.x_dim
         y_dim = self.box.y_dim
         i, j, _ = self.temp_grid_position
-        neighs = [
+        neigh_positions = [
 
             ((i+1)%x_dim,(j - 1) % y_dim),((i+1)%x_dim,j),((i+1)%x_dim,(j + 1) % y_dim),
             (i,(j - 1) % y_dim), (i,(j + 1) % y_dim),
             ((i-1)%x_dim,(j - 1) % y_dim),((i-1)%x_dim,j),((i-1)%x_dim,(j + 1) % y_dim)
         ]
-        print(neighs)
-        return neighs
 
+        for pos in neigh_positions:
+            a = pos[0]
+            b = pos[1]
+            for global_id in self.grid[a,b]:
+                neigh_id_list.append(global_id)
 
-
+        return neigh_id_list
 
     def GET_EDGES(self):
 
@@ -333,9 +340,9 @@ class Shape():
 
         if self.shape == 3:
 
-            v1 = self.vertices[0]
-            v2 = self.vertices[1]
-            v3 = self.vertices[2]
+            v1 = self.temp_vertices[0]
+            v2 = self.temp_vertices[1]
+            v3 = self.temp_vertices[2]
 
             a = np.linalg.det(np.array([[v1[0], v1[1], 1],
                                         [v2[0], v2[1], 1],
@@ -360,16 +367,12 @@ class Shape():
             return x,y,r
 
 
-
-
     def ATTEMPT_MOVE(self):
 
         p = self.box.p
         d = self.box.D[self.type]
         moves = self.box.moves
         move_type = random.choices(moves, weights = p, k = 1)
-
-        # choose the kind of move to attempt
 
         if move_type == 0:
 
@@ -388,55 +391,95 @@ class Shape():
             self.neighbours = self.GET_NEIGHBOURS()
             self.temp_edges = self.GET_EDGES()
 
-            # make a displacement move
-            # generate random displacement vector
-            # move all indices
-            # update circle coordinates
-
-
-
         if move_type == 1:
-            # make SWAP move
-            pass
 
-        # 0 - DISPLACE
-        # 1 - SWAP
+            rand = random.randint(0, len(self.grid.global_id_list) - 1)
+            p2 = self.box.global_id_list[rand]
 
-        if move_type == 2:
-            # rotate each vertex about the center of the circle
+            ox,oy = p2.x - self.x, p2.y - self.y
+
+            self.temp_vertices = copy.deepcopy(self.vertices)
+            for i in range(len(self.vertices)-1):
+                self.temp_vertices[i] -= ox
+                self.temp_vertices[i+1] -= oy
+
+            p2.temp_vertices = copy.deepcopy(p2.temp_vertices)
+            for i in range(len(p2.vertices)-1):
+                p2.temp_vertices[i] += ox
+                p2.temp_vertices[i+1] += oy
+
+            p2.temp_x, p2.temp_y, _ = p2.CIRCLE()
+            self.temp_x, self.temp_y, _ = self.CIRCLE()
+            
+            # move self
+            r = self.r
+            rnd1 = d * r * np.random()
+            rnd2 = d * r * np.random()
+
+            for i in range(len(self.vertices)-1):
+                self.temp_vertices[i] += rnd1
+                self.temp_vertices[i+1] += rnd2
+
+            self.temp_x, self.temp_y, _ = self.CIRCLE()
+            self.temp_grid_position = self.GET_GRID_POSITION(self.temp_x,self.temp_y)
+            self.neighbours = self.GET_NEIGHBOURS()
+            self.temp_edges = self.GET_EDGES()
+            
+            # move p2
+            
+            r = p2.r
+            rnd1 = d * r * np.random()
+            rnd2 = d * r * np.random()
+
+            for i in range(len(p2.vertices)-1):
+                p2.temp_vertices[i] += rnd1
+                p2.temp_vertices[i+1] += rnd2
+
+            p2.temp_x, p2.temp_y, _ = p2.CIRCLE()
+            p2.temp_grid_position = p2.GET_GRID_POSITION(p2.temp_x,p2.temp_y)
+            p2.neighbours = p2.GET_NEIGHBOURS()
+            p2.temp_edges = p2.GET_EDGES()
+            
+            
+            # rotate self
+            
             for i in range(int(len(self.temp_vertices)/2)):
                 x = self.temp_vertices[i]
                 y = self.temp_vertices[i+1]
                 self.temp_vertices[i], self.temp_vertices[i+1] = copy.deepcopy(self.ROTATE(x,y))
+                
+            # rotate p2
+            
+            for i in range(int(len(p2.temp_vertices)/2)):
+                x = p2.temp_vertices[i]
+                y = p2.temp_vertices[i+1]
+                p2.temp_vertices[i], p2.temp_vertices[i+1] = copy.deepcopy(p2.ROTATE(x,y))
+                
 
+        if (self.ACCEPT_MOVE() == True) and (p2.ACCEPT_MOVE() == True):
 
-        if self.ACCEPT_MOVE() == True:
-
+            self.UPDATE_GRID()
             self.vertices = copy.deepcopy(self.temp_vertices)
             self.x, self.y = copy.deepcopy(self.temp_x, self.temp_y)
-            self.UPDATE_GRID() # i, j, q
             self.grid_position = copy.deepcopy(self.temp_grid_position)
             self.edges = copy.deepcopy(self.temp_edges)
-            self.UPDATE_GRID(self)
+
+            p2.UPDATE_GRID()
+            p2.vertices = copy.deepcopy(p2.temp_vertices)
+            p2.x, p2.y = copy.deepcopy(p2.temp_x, p2.temp_y)
+            p2.grid_position = copy.deepcopy(p2.temp_grid_position)
+            p2.edges = copy.deepcopy(p2.temp_edges)
 
         else:
-            pass
-
-
+            
+            print("Move rejected")
+            print("Unupdate")
 
 
     def ACCEPT_MOVE(self):
 
-        # generate neighbour list
-        # from the position on the grid find the proximal squares
-        # from each square get the global id of shapes there
-        # append the pointers to the neighbour list
-        # check if crosses with any neighbour
-
-        # iterate all neighbours
-
-        for n in self.neighbours:
-
+        for n_id in self.neighbours:
+            n = self.box.global_id_list[n_id]
             # for each edge in the original shape
             for edge1 in self.temp_edges:
                 p1 = edge1[:2]
