@@ -3,3 +3,5 @@ shapes 3 3
 vertices 0 0 0 1 1 0, 0 0 0 2 2 0
 x 10
 y 10
+stop max_iter 100
+#stop pack_frac 0.5

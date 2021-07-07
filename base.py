@@ -35,6 +35,9 @@ class Structure():
 
     """
 
+    def PACKING_FRACTION(self):
+        return (self.type_areas * self.type_numbers)/self.box_area
+
     def CIRCLE(self,shape,type):
 
         # https://mathworld.wolfram.com/Circumcircle.html
@@ -66,17 +69,17 @@ class Structure():
 
             return r
 
-    def MAKE_BOX(self):
+    def MAKE_GRID(self):
+
+        grid = np.zeros((x_dim, y_dim), dtype=object)
 
         x_dim = self.x_dim
         y_dim = self.y_dim
 
-        self.grid = np.zeros((x_dim,y_dim),dtype=object)
-
         for i in range(x_dim):
             for j in range(y_dim):
-                self.grid[i,j] = []
-
+                grid[i,j] = []
+        return grid
 
 
 
@@ -171,9 +174,6 @@ class Structure():
 
     def __init__(self,file_name):
 
-        self.global_id_list = []
-        self.R = []
-
         self.input_file = file_name
         with open(file_name,"r") as file:
             lines = file.readlines()
@@ -222,6 +222,11 @@ class Structure():
         #number of polygon of each type
         self.type_numbers = np.zeros(self.types)
 
+        self.global_id_list = []
+        self.R = []
+        self.total_area = 0
+        self.packing_fraction = 0
+
         #area of each polygon
         self.type_areas = np.zeros(self.types)
         for i in range(len(self.type_areas)):
@@ -230,14 +235,12 @@ class Structure():
             self.R.append(r)
 
         #packing fraction
-        self.packing_fraction = 0
-
-        self.MAKE_BOX()
+        self.grid = self.MAKE_GRID()
         self.spacing = 2 * max(self.R)
+        self.box_area = (self.x_dim * self.spacing) * (self.y_dim * self.spacing)
 
 
 class Shape():
-
 
     """General class defining shared shape methods.
 
@@ -246,26 +249,29 @@ class Shape():
         - INTERSECTION - checks if the two shapes intersect
         - ENDPOINTS
         - ADD_NUMBER - increases the count for the given shape
-        - INCREASE_AREA - adds to the occupied area
+        - ADD_AREA - adds total area
         - MOVE - attempts to move the shape
     """
+
+    # updater functions
+    def ADD_NUMBER(self):
+        self.box.type_numbers[self.type] += 1
+    def ADD_AREA(self):
+        self.box.total_area += self.box.type_areas[self.type]
+
 
     def ROTATE(self, x, y):
 
         ox = self.temp_x
         oy = self.temp_y
-
         rnd = np.random()
-
         theta = np.radians(rnd*360)
-
-        M = np.array([[1,1],[1,1]])
-
+        M = np.array([[np.cos(theta), -1 * np.sin(theta)],[np.sin(theta), np.cos(theta)]])
         v = np.array([x - ox,y - oy])
-
         nv= np.dot(M,v)
         nv[0] += ox
         nv[1] += oy
+
         return nv[0],nv[1]
 
     def CIRCLE(self):
@@ -300,15 +306,25 @@ class Shape():
 
             return x,y,r
 
+    def UPDATE_GRID(self):
+
+        i,j,q = self.grid_position
+        m,n,_ = self.temp_grid_position
+        self.box.grid[i,j].pop(q)
+        self.box.grid[m,n].append(self.global_id)
+
+    def GET_GRID_POSITION(self,x,y):
+
+        i = (x//(self.grid.spacing))%self.grid.x_dim
+        j = (y//(self.grid.spacing))%self.grid.y_dim
+        q = len(self.grid[i,j])
+        return i, j, q
 
     def APPEND_GLOBAL_ID_LIST(self):
         self.box.global_id_list.append(self)
 
     def GET_NEIGHBOURS(self):
         """Returns the list of particles neighbours"""
-        pass
-
-    def GET_GRID_POSITION(self):
         pass
 
     def ATTEMPT_MOVE(self):
@@ -333,9 +349,9 @@ class Shape():
                 self.temp_vertices[i+1] += rnd2
 
             self.temp_x, self.temp_y, _ = self.CIRCLE()
-            self.temp_grid_position = self.GET_GRID_POSITION()
+            self.temp_grid_position = self.GET_GRID_POSITION(self.temp_x,self.temp_y)
             self.neighbours = self.GET_NEIGHBOURS()
-            self.temp_edges = self.EDGES()
+            self.temp_edges = self.GET_EDGES()
 
             # make a displacement move
             # generate random displacement vector
@@ -352,7 +368,7 @@ class Shape():
         # 1 - SWAP
 
         if move_type == 2:
-            # rotate each vertex
+            # rotate each vertex about the center of the circle
             for i in range(int(len(self.temp_vertices)/2)):
                 x = self.temp_vertices[i]
                 y = self.temp_vertices[i+1]
@@ -364,14 +380,14 @@ class Shape():
 
             self.vertices = copy.deepcopy(self.temp_vertices)
             self.x, self.y = copy.deepcopy(self.temp_x, self.temp_y)
+            self.UPDATE_GRID() # i, j, q
             self.grid_position = copy.deepcopy(self.temp_grid_position)
             self.edges = copy.deepcopy(self.temp_edges)
 
 
-    def EDGES(self):
+    def GET_EDGES(self):
 
         shape = self.shape
-
         if shape == 3:
 
             AB = self.temp_vertices[0,1,2,3]
@@ -379,8 +395,6 @@ class Shape():
             CA = self.temp_vertices[4,5,0,1]
 
             return (AB,BC,CA)
-
-
         elif shape == 4:
 
             AB = self.temp_vertices[0,1,2,3]

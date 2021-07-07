@@ -1,0 +1,5 @@
+# prepare the simulation environment
+# choose random particle from the collection
+# attempt move
+# write to file
+# finish and report stats
