@@ -1,44 +1,23 @@
 #!/usr/bin/env python3
 
-# base.py
-# Description:
-
-# Imports
 import copy
-import random
-
 import numpy as np
-import matplotlib.pyplot as plt
-
-# Classes:
-# - Structure
-
-# - Shape --:
-#           |- Triangle
-#           |- Qadrilateral
-
-# Structure - stores configuration of the running script
-
-
+import random
 
 class Structure():
 
-    """
-    Attributes:
-        - x: x dimension
-        - y: y dimension
-        - types: number of types
-        - shapes: shapes corresponding to given type
-        - vertices: vertices for base of each shape
-        - areas: area occupied by each type
-
-    Methods:
-        -
-
-    """
+    def CONDITION(self):
+        self.PACKING_FRACTION()
+        print(f'Packing fraction is: {self.packing_fraction}')
+        print(f'Move: {self.iter_counter}')
+        if self.stop == 0:
+            condition = self.packing_fraction < self.max_packing_fraction
+        elif self.stop == 1:
+            condition = self.iter_counter < self.max_iter
+        return condition
 
     def PACKING_FRACTION(self):
-        return (self.type_areas * self.type_numbers)/self.box_area
+        self.packing_fraction = self.total_area/self.box_area
 
     def CIRCLE(self,shape,type):
 
@@ -69,7 +48,7 @@ class Structure():
             y = -1.0 * (by / (2 * a))
             r = np.sqrt(bx ** 2 + by ** 2 - 4 * a * c) / (2 * abs(a))
 
-            return x,y,r
+            return r
 
     def MAKE_GRID(self):
 
@@ -169,7 +148,6 @@ class Structure():
         else:
             print("Nope!")
 
-
     def __init__(self,file_name):
 
         self.input_file = file_name
@@ -195,6 +173,28 @@ class Structure():
                     self.shapes = []
                     for i in range(self.types):
                         self.shapes.append(int(input[i+1]))
+
+                elif input[0] == 'masses':
+                    self.M = list(map(float,input[1:]))
+
+                elif input[0] == 'moves':
+                    self.moves = list(map(float,input[1:]))
+
+                elif input[0] == "prob":
+                    self.p = list(map(float,input[1:]))
+
+                elif input[0] == 'stop':
+                    if input[1] == 'pack_frac':
+                        self.stop = 0
+                        self.max_packing_fraction = float(input[2])
+
+                    elif input[1] == 'max_iter':
+                        self.stop = 1
+                        self.max_iter = float(input[2])
+                        condition = self.iter_counter >= self.max_iter
+
+                elif input[0] == "initial_num":
+                    self.initial_num = int(input[1])
 
                 elif input[0] == 'vertices':
 
@@ -224,13 +224,12 @@ class Structure():
         self.R = []
         self.total_area = 0
         self.packing_fraction = 0
-        self.moves = (1)
 
         #area of each polygon
         self.type_areas = np.zeros(self.types)
         for i in range(len(self.type_areas)):
             self.type_areas[i] = self.AREA(i)
-            _,_,r = self.CIRCLE(self.shapes[i],i)
+            r = self.CIRCLE(self.shapes[i],i)
             self.R.append(r)
 
         #packing fraction
@@ -238,21 +237,16 @@ class Structure():
         self.spacing = max(self.R)
         self.box_area = (self.x_dim * self.spacing) * (self.y_dim * self.spacing)
 
+        #simulation
+        self.move_pattern = []
+        self.move_acceptance = []
+        self.iter_counter = 0
+
 
 class Shape():
 
-    """General class defining shared shape methods.
-
-    Methods:
-        - CREATE - initializes the shape
-        - INTERSECTION - checks if the two shapes intersect
-        - ENDPOINTS
-        - ADD_NUMBER - increases the count for the given shape
-        - ADD_AREA - adds total area
-        - MOVE - attempts to move the shape
-    """
-
-    # updater functions
+    # ============================
+    # INITIALIZATION METHODS
     def WRAP(self):
         for i in range(len(self.vertices) // 2):
             if self.temp_vertices[2 * i] > self.box.x_dim * self.box.spacing or self.temp_vertices[2 * i] < 0:
@@ -285,8 +279,6 @@ class Shape():
         self.neighbours = self.GET_NEIGHBOURS()
 
         while (not self.ACCEPT_MOVE()):
-
-            print('moving')
             rnd1 = np.random.rand() * self.box.spacing * self.box.x_dim
             rnd2 = np.random.rand() * self.box.spacing * self.box.y_dim
 
@@ -296,7 +288,46 @@ class Shape():
             self.WRAP()
 
         self.vertices = copy.deepcopy(self.temp_vertices)
+        self.x, self.y, self.r = self.CIRCLE()
+        self.temp_x, self.temp_y = self.x, self.y
+        self.grid_position = self.GET_GRID_POSITION()
+        self.temp_grid_position = copy.deepcopy(self.grid_position)
+        self.neighbours = self.GET_NEIGHBOURS()
 
+    def APPEND_GLOBAL_ID_LIST(self):
+            self.box.global_id_list.append(self)
+
+    def ADD_TO_GRID(self):
+            i, j, q = self.GET_GRID_POSITION()
+            self.box.grid[i, j].append(self.global_id)
+
+    def ADD_VERTEX_POSITIONS(self):
+            self.box.vertex_positions.append(self.vertices)
+
+    def GET_EDGES(self):
+
+            shape = self.shape
+            if shape == 3:
+
+                AB = self.temp_vertices[np.array([0, 1, 2, 3])]
+                BC = self.temp_vertices[np.array([2, 3, 4, 5])]
+                CA = self.temp_vertices[np.array([4, 5, 0, 1])]
+
+                return (AB, BC, CA)
+            elif shape == 4:
+
+                AB = self.temp_vertices[0, 1, 2, 3]
+                BC = self.temp_vertices[2, 3, 4, 5]
+                CD = self.temp_vertices[4, 5, 6, 7]
+                DA = self.temp_vertices[6, 7, 0, 1]
+
+                return AB, BC, CD, DA
+
+    # ========================================================
+    # UPDATING METHODS
+    def ADD_MOVE(self,move,acc):
+        self.box.move_pattern.append(move)
+        self.box.move_acceptance.append(acc)
 
     def ADD_NUMBER(self):
         self.box.type_numbers[self.type] += 1
@@ -311,6 +342,8 @@ class Shape():
         self.box.grid[i, j].pop(q)
         self.box.grid[m, n].append(self.global_id)
 
+    # ========================
+    # MOVE METHODS
     def GET_GRID_POSITION(self):
 
         x = self.temp_x
@@ -320,15 +353,6 @@ class Shape():
         j = int((y // (self.box.spacing)) % self.box.y_dim)
         q = len(self.box.grid[i, j])
         return i, j, q
-
-    def APPEND_GLOBAL_ID_LIST(self):
-        self.box.global_id_list.append(self)
-
-    def ADD_TO_GRID(self):
-        i,j,q = self.GET_GRID_POSITION()
-        self.box.grid[i,j].append(self.global_id)
-    def ADD_VERTEX_POSITIONS(self):
-        self.box.vertex_positions.append(self.vertices)
 
     def GET_NEIGHBOURS(self):
 
@@ -351,28 +375,6 @@ class Shape():
                 neigh_id_list.append(global_id)
 
         return neigh_id_list
-
-    def GET_EDGES(self):
-
-        shape = self.shape
-        if shape == 3:
-
-            AB = self.temp_vertices[np.array([0,1,2,3])]
-            BC = self.temp_vertices[np.array([2,3,4,5])]
-            CA = self.temp_vertices[np.array([4,5,0,1])]
-
-            return (AB,BC,CA)
-        elif shape == 4:
-
-            AB = self.temp_vertices[0,1,2,3]
-            BC = self.temp_vertices[2,3,4,5]
-            CD = self.temp_vertices[4,5,6,7]
-            DA = self.temp_vertices[6,7,0,1]
-
-            return (AB,BC,CD,DA)
-
-
-    # geometric functions
 
     def ROTATE(self, x, y,angle):
 
@@ -418,79 +420,95 @@ class Shape():
             r = np.sqrt(bx ** 2 + by ** 2 - 4 * a * c) / (2 * abs(a))
             return x,y,r
 
-
     def ATTEMPT_MOVE(self):
-
-        p = 1 # self.box.p
-        d = 1 #self.box.D[self.type]
+        self.box.iter_counter += 1
         moves = self.box.moves
-        move_type = 1 # random.choices(moves, weights = p, k = 1)
-
+        p = self.box.p
+        move_type = random.choices(moves, weights = p)[0]
+        # =================================================================================
+        # DISPLACE
         if move_type == 0:
-
             r = self.r
-            rnd1 = d * r * np.random()
-            rnd2 = d * r * np.random()
-
-            self.temp_vertices = copy.deepcopy(self.vertices)
-
-            for i in range(len(self.vertices)-1):
-                self.temp_vertices[i] += rnd1
-                self.temp_vertices[i+1] += rnd2
-
-            self.temp_x, self.temp_y, _ = self.CIRCLE()
-            self.temp_grid_position = self.GET_GRID_POSITION(self.temp_x,self.temp_y)
-            self.neighbours = self.GET_NEIGHBOURS()
-            self.temp_edges = self.GET_EDGES()
-
-        if move_type == 1:
-
-            rand = 1 #random.randint(0, len(self.grid.global_id_list) - 1)
-            p2 = self.box.global_id_list[rand]
-            ox,oy = p2.x - self.x, p2.y - self.y
-            self.temp_vertices = copy.deepcopy(self.vertices)
-            for i in range(len(self.vertices)//2):
-                self.temp_vertices[2*i] = copy.deepcopy(self.temp_vertices[2*i] + ox)
-                self.temp_vertices[2*i+1] = copy.deepcopy(self.temp_vertices[2*i + 1] + oy)
-            
-
-            p2.temp_vertices = copy.deepcopy(p2.vertices)
-
-            for i in range(len(p2.vertices)//2):
-                p2.temp_vertices[2*i] = copy.deepcopy(p2.temp_vertices[2*i] - ox)
-                p2.temp_vertices[2*i+1] = copy.deepcopy(p2.temp_vertices[2*i + 1] - oy)
-
-
-            p2.temp_x, p2.temp_y, _ = p2.CIRCLE()
-            self.temp_x, self.temp_y, _ = self.CIRCLE()
-
-            # move self
-            r = self.r
-            rnd1 = 2 # d * r * np.random.rand()
-            rnd2 = 2 #d * r * np.random.rand()
+            d = 1/self.box.M[self.type]
+            rnd1 = d * r * np.random.rand()
+            rnd2 = d * r * np.random.rand()
 
             for i in range(len(self.vertices)//2):
                 self.temp_vertices[2*i] = copy.deepcopy(self.temp_vertices[2*i] + rnd1)
                 self.temp_vertices[2*i+1] = copy.deepcopy(self.temp_vertices[2*i + 1] + rnd2)
+            self.WRAP()
+
+            if (self.ACCEPT_MOVE() == True):
+
+                self.UPDATE_GRID()
+                self.vertices = copy.deepcopy(self.temp_vertices)
+                self.x, self.y = self.temp_x, self.temp_y
+                self.grid_position = copy.deepcopy(self.temp_grid_position)
+                self.edges = copy.deepcopy(self.temp_edges)
+                self.box.vertex_positions[self.global_id] = copy.deepcopy(self.vertices)
+                self.ADD_MOVE(move_type,1)
+
+            else:
+
+                self.temp_vertices = copy.deepcopy(self.vertices)
+                self.temp_x, self.temp_y = self.x, self.y
+                self.temp_grid_position = copy.deepcopy(self.grid_position)
+                self.temp_edges = copy.deepcopy(self.edges)
+                self.ADD_MOVE(move_type,0)
+        # ==================================================================================
+        # SWAP
+        if move_type == 1:
+
+            rand = random.randint(0, len(self.box.global_id_list) - 1)
+            p2 = self.box.global_id_list[rand]
+            ox,oy = p2.x - self.x, p2.y - self.y
+
+            self.temp_vertices = copy.deepcopy(self.vertices)
+            for i in range(len(self.vertices)//2):
+                self.temp_vertices[2*i] = copy.deepcopy(self.temp_vertices[2*i] + ox)
+                self.temp_vertices[2*i+1] = copy.deepcopy(self.temp_vertices[2*i + 1] + oy)
+            self.WRAP()
+
+            p2.temp_vertices = copy.deepcopy(p2.vertices)
+            for i in range(len(p2.vertices)//2):
+                p2.temp_vertices[2*i] = copy.deepcopy(p2.temp_vertices[2*i] - ox)
+                p2.temp_vertices[2*i+1] = copy.deepcopy(p2.temp_vertices[2*i + 1] - oy)
+            p2.WRAP()
+
+            p2.temp_x, p2.temp_y, _ = p2.CIRCLE()
+            self.temp_x, self.temp_y, _ = self.CIRCLE()
+
+            r = self.r
+            d = 1/self.box.M[self.type]
+            rnd1 = d * r * np.random.rand()
+            rnd2 = d * r * np.random.rand()
+
+            for i in range(len(self.vertices)//2):
+                self.temp_vertices[2*i] = copy.deepcopy(self.temp_vertices[2*i] + rnd1)
+                self.temp_vertices[2*i+1] = copy.deepcopy(self.temp_vertices[2*i + 1] + rnd2)
+            self.WRAP()
 
             # move p2
-
             r = p2.r
+            d = 1/p2.box.M[p2.type]
+            rnd1 = d * r * np.random.rand()
+            rnd2 = d * r * np.random.rand()
 
             for i in range(len(p2.vertices)//2):
                 p2.temp_vertices[2*i] = copy.deepcopy(p2.temp_vertices[2*i] - rnd1)
                 p2.temp_vertices[2*i+1] = copy.deepcopy(p2.temp_vertices[2*i + 1] - rnd2)
+            p2.WRAP()
 
             self.temp_x, self.temp_y, _ = self.CIRCLE()
             p2.temp_x, p2.temp_y, _ = p2.CIRCLE()
-            # rotate self
 
+            # rotate self
             angle = np.random.randint(360)
             for i in range(int(len(self.temp_vertices)//2)):
                 x = self.temp_vertices[2*i]
                 y = self.temp_vertices[2*i+1]
                 self.temp_vertices[2*i], self.temp_vertices[2*i+1] = copy.deepcopy(self.ROTATE(x,y,angle))
-
+            self.WRAP()
             self.temp_x, self.temp_y, _ = self.CIRCLE()
             self.temp_grid_position = self.GET_GRID_POSITION()
             self.neighbours = self.GET_NEIGHBOURS()
@@ -502,36 +520,68 @@ class Shape():
                 x = p2.temp_vertices[2*i]
                 y = p2.temp_vertices[2*i+1]
                 p2.temp_vertices[2*i], p2.temp_vertices[2*i+1] = copy.deepcopy(p2.ROTATE(x,y,angle))
-
+            p2.WRAP()
             p2.temp_x, p2.temp_y, _ = p2.CIRCLE()
             p2.temp_grid_position = p2.GET_GRID_POSITION()
             p2.neighbours = p2.GET_NEIGHBOURS()
             p2.temp_edges = p2.GET_EDGES()
 
+            if (self.ACCEPT_MOVE() == True) and (p2.ACCEPT_MOVE() == True):
 
-        if (self.ACCEPT_MOVE() == True) and (p2.ACCEPT_MOVE() == True):
+                self.UPDATE_GRID()
+                self.vertices = copy.deepcopy(self.temp_vertices)
+                self.x, self.y = self.temp_x, self.temp_y
+                self.grid_position = copy.deepcopy(self.temp_grid_position)
+                self.edges = copy.deepcopy(self.temp_edges)
 
-            self.UPDATE_GRID()
-            self.vertices = copy.deepcopy(self.temp_vertices)
-            self.x, self.y = self.temp_x, self.temp_y
-            self.grid_position = copy.deepcopy(self.temp_grid_position)
-            self.edges = copy.deepcopy(self.temp_edges)
+                p2.UPDATE_GRID()
+                p2.vertices = copy.deepcopy(p2.temp_vertices)
+                p2.x, p2.y = p2.temp_x, p2.temp_y
+                p2.grid_position = copy.deepcopy(p2.temp_grid_position)
+                p2.edges = copy.deepcopy(p2.temp_edges)
 
-            p2.UPDATE_GRID()
-            p2.vertices = copy.deepcopy(p2.temp_vertices)
-            p2.x, p2.y = p2.temp_x, p2.temp_y
-            p2.grid_position = copy.deepcopy(p2.temp_grid_position)
-            p2.edges = copy.deepcopy(p2.temp_edges)
+                self.box.vertex_positions[self.global_id] = copy.deepcopy(self.vertices)
+                p2.box.vertex_positions[p2.global_id] = copy.deepcopy(p2.vertices)
 
-            self.box.vertex_positions[self.global_id] = copy.deepcopy(self.vertices)
-            p2.box.vertex_positions[p2.global_id] = copy.deepcopy(p2.vertices)
+                self.ADD_MOVE(move_type,1)
 
-            print(("Move accepted"))
+            else:
 
-        else:
-            
-            print("Move rejected")
+                self.temp_vertices = copy.deepcopy(self.vertices)
+                self.temp_x, self.temp_y = self.x, self.y
+                self.temp_grid_position = copy.deepcopy(self.grid_position)
+                self.temp_edges = copy.deepcopy(self.edges)
 
+                p2.temp_vertices = copy.deepcopy(p2.vertices)
+                p2.temp_x, p2.temp_y = p2.x, p2.y
+                p2.temp_grid_position = copy.deepcopy(p2.grid_position)
+                p2.temp_edges = copy.deepcopy(p2.edges)
+                self.ADD_MOVE(move_type, 0)
+
+        # =================================================
+        # ADD NEW PARTICLE
+        if move_type == 2:
+            pick_type = random.choice(list(range(self.box.types)))
+            Shape(self.box,pick_type)
+
+            if (self.ACCEPT_MOVE() == True):
+
+                self.UPDATE_GRID()
+                self.vertices = copy.deepcopy(self.temp_vertices)
+                self.x, self.y = self.temp_x, self.temp_y
+                self.grid_position = copy.deepcopy(self.temp_grid_position)
+                self.edges = copy.deepcopy(self.temp_edges)
+                self.box.vertex_positions[self.global_id] = copy.deepcopy(self.vertices)
+                self.ADD_MOVE(move_type,1)
+
+            else:
+
+                self.temp_vertices = copy.deepcopy(self.vertices)
+                self.temp_x, self.temp_y = self.x, self.y
+                self.temp_grid_position = copy.deepcopy(self.grid_position)
+                self.temp_edges = copy.deepcopy(self.edges)
+
+                self.ADD_MOVE(move_type,0)
 
     def ACCEPT_MOVE(self):
 
@@ -565,6 +615,7 @@ class Shape():
         self.shape = box.shapes[type]
 
         self.CREATE()
+        self.box.total_area += self.box.type_areas[self.type]
 
         self.ADD_TO_GRID()
         self.ADD_VERTEX_POSITIONS()

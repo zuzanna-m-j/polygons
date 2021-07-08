@@ -1,7 +1,10 @@
 types 2
 shapes 3 3
 vertices 1 0 4 0 1 1, 4 2 5 2 4 3
-x 30
-y 30
-stop max_iter 100
-#stop pack_frac 0.5
+x 20
+y 20
+masses 5 10
+moves 0 1 2
+prob 1 0.3 4
+stop pack_frac 0.2
+initial_num 7
