@@ -1,6 +1,6 @@
 types 2
 shapes 3 3
-vertices 0 0 2 0 0 1, 10 2 12 2 10 3
+vertices -2 0 0 0 -2 1, 4 2 5 2 4 3
 x 10
 y 10
 stop max_iter 100

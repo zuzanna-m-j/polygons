@@ -1,9 +1,4 @@
-# prepare the simulation environment
-# choose random particle from the collection
-# attempt move
-# write to file
-# finish and report stats
-
-# to do list - shape creation routine -- random placement in the box
-# test overlap after creation
-# hard code to take initial indices
+ - create particles with random offset from the origin
+ - wrap
+ - check if it overlaps after creation
+ - displace until does not overlap

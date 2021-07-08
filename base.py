@@ -253,8 +253,21 @@ class Shape():
     """
 
     # updater functions
+    def WRAP(self):
+        for i in range(len(self.vertices) // 2):
+            if self.temp_vertices[2 * i] > self.box.x_dim * self.box.spacing or self.temp_vertices[2 * i] < 0:
+                self.temp_vertices[2 * i] = copy.deepcopy(self.temp_vertices[2 * i] % (self.box.x_dim * self.box.spacing))
+
+            if self.temp_vertices[2 * i + 1] > self.box.y_dim * self.box.spacing or self.temp_vertices[2 * i + 1] < 0:
+                self.temp_vertices[2 * i + 1] = copy.deepcopy(self.temp_vertices[2 * i + 1] % (self.box.y_dim * self.box.spacing))
+
     def CREATE(self):
-        return copy.deepcopy(self.box.vertices[self.type])
+
+        # random offset from the origin
+        self.vertices = copy.deepcopy(self.box.vertices[self.type])
+        self.temp_vertices = copy.deepcopy(self.vertices)
+        self.WRAP()
+        self.vertices = copy.deepcopy(self.temp_vertices)
 
     def ADD_NUMBER(self):
         self.box.type_numbers[self.type] += 1
@@ -522,8 +535,7 @@ class Shape():
         self.type = type
         self.shape = box.shapes[type]
 
-        self.vertices = self.CREATE()
-        self.temp_vertices = copy.deepcopy(self.vertices)
+        self.CREATE()
 
         self.edges = self.GET_EDGES()
         self.temp_edges = copy.deepcopy(self.edges)

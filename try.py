@@ -4,6 +4,7 @@ from base import*
 
 box = Structure("input.txt")
 
+
 t1 = Shape(box,0)
 t2 = Shape(box,1)
 color = ["dodgerblue","red"]
