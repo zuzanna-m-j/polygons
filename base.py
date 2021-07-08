@@ -264,10 +264,39 @@ class Shape():
     def CREATE(self):
 
         # random offset from the origin
+        rnd1 = np.random.rand() * self.box.spacing * self.box.x_dim
+        rnd2 = np.random.rand() * self.box.spacing * self.box.y_dim
         self.vertices = copy.deepcopy(self.box.vertices[self.type])
         self.temp_vertices = copy.deepcopy(self.vertices)
+
+
+        for i in range(len(self.vertices) // 2):
+            self.temp_vertices[2 * i] = copy.deepcopy(self.temp_vertices[2 * i] + rnd1)
+            self.temp_vertices[2 * i + 1] = copy.deepcopy(self.temp_vertices[2 * i + 1] + rnd2)
         self.WRAP()
+
+        self.edges = self.GET_EDGES()
+        self.temp_edges = copy.deepcopy(self.edges)
+
+        self.x, self.y, self.r = self.CIRCLE()
+        self.temp_x, self.temp_y = self.x, self.y
+        self.grid_position = self.GET_GRID_POSITION()
+        self.temp_grid_position = copy.deepcopy(self.grid_position)
+        self.neighbours = self.GET_NEIGHBOURS()
+
+        while (not self.ACCEPT_MOVE()):
+
+            print('moving')
+            rnd1 = np.random.rand() * self.box.spacing * self.box.x_dim
+            rnd2 = np.random.rand() * self.box.spacing * self.box.y_dim
+
+            for i in range(len(self.vertices) // 2):
+                self.temp_vertices[2 * i] = copy.deepcopy(self.temp_vertices[2 * i] + rnd1)
+                self.temp_vertices[2 * i + 1] = copy.deepcopy(self.temp_vertices[2 * i + 1] + rnd2)
+            self.WRAP()
+
         self.vertices = copy.deepcopy(self.temp_vertices)
+
 
     def ADD_NUMBER(self):
         self.box.type_numbers[self.type] += 1
@@ -537,12 +566,5 @@ class Shape():
 
         self.CREATE()
 
-        self.edges = self.GET_EDGES()
-        self.temp_edges = copy.deepcopy(self.edges)
-
-        self.x, self.y, self.r = self.CIRCLE()
-        self.temp_x,self.temp_y = self.x, self.y
-        self.grid_position = self.GET_GRID_POSITION()
-        self.temp_grid_position = copy.deepcopy(self.grid_position)
         self.ADD_TO_GRID()
         self.ADD_VERTEX_POSITIONS()

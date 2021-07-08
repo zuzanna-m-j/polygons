@@ -1,7 +1,7 @@
 types 2
 shapes 3 3
-vertices -2 0 0 0 -2 1, 4 2 5 2 4 3
-x 10
-y 10
+vertices 1 0 4 0 1 1, 4 2 5 2 4 3
+x 30
+y 30
 stop max_iter 100
 #stop pack_frac 0.5

@@ -4,37 +4,23 @@ from base import*
 
 box = Structure("input.txt")
 
+particles = []
+for _ in range(5):
+    particles.append(Shape(box,random.choice(list(range(box.types)))))
 
-t1 = Shape(box,0)
-t2 = Shape(box,1)
-color = ["dodgerblue","red"]
-for i, s in enumerate(box.shapes):
+color = ["dodgerblue","red",'green','gold','violet']
+for i in range(len(particles)):
     v = np.array(box.vertex_positions[i])
     st = 0
+    s = particles[i].shape
     for n in range(s):
         x, y = v[st:st + 2]
         p, q = v[st - 2], v[st - 1]
         st += 2
-        plt.plot(x, y, 'o', color = color[i], label=n)
-        plt.plot((x, p), (y, q), '--', color=color[i])
-    plt.legend()
-
-t1.ATTEMPT_MOVE()
-
-color = ["lightblue","orange"]
-for i, s in enumerate(box.shapes):
-    v = np.array(box.vertex_positions[i])
-    st = 0
-    for n in range(s):
-        x, y = v[st:st + 2]
-        p, q = v[st - 2], v[st - 1]
-        st += 2
-        plt.plot(x, y, 'o', color = color[i], label=n)
+        plt.plot(x, y, 'o', label=n)
         plt.plot((x, p), (y, q), '--', color=color[i])
     plt.legend()
 plt.show()
-
-
 
 # print positions before and after
 
