@@ -1,5 +1,41 @@
 #!/usr/bin/env python3
 import numpy as np
+from base import*
+
+box = Structure("input.txt")
+
+t1 = Shape(box,0)
+t2 = Shape(box,1)
+color = ["dodgerblue","red"]
+for i, s in enumerate(box.shapes):
+    v = np.array(box.vertex_positions[i])
+    st = 0
+    for n in range(s):
+        x, y = v[st:st + 2]
+        p, q = v[st - 2], v[st - 1]
+        st += 2
+        plt.plot(x, y, 'o', color = color[i], label=n)
+        plt.plot((x, p), (y, q), '--', color=color[i])
+    plt.legend()
+
+t1.ATTEMPT_MOVE()
+
+color = ["lightblue","orange"]
+for i, s in enumerate(box.shapes):
+    v = np.array(box.vertex_positions[i])
+    st = 0
+    for n in range(s):
+        x, y = v[st:st + 2]
+        p, q = v[st - 2], v[st - 1]
+        st += 2
+        plt.plot(x, y, 'o', color = color[i], label=n)
+        plt.plot((x, p), (y, q), '--', color=color[i])
+    plt.legend()
+plt.show()
+
+
+
+# print positions before and after
 
 # ox = 2
 # oy = 1

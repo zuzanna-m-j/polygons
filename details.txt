@@ -3,3 +3,7 @@
 # attempt move
 # write to file
 # finish and report stats
+
+# to do list - shape creation routine -- random placement in the box
+# test overlap after creation
+# hard code to take initial indices
