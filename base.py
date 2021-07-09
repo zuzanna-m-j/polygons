@@ -287,7 +287,15 @@ class Shape():
                 self.temp_vertices[2 * i + 1] = copy.deepcopy(self.temp_vertices[2 * i + 1] + rnd2)
             self.WRAP()
 
+            self.temp_x, self.temp_y,_ = self.CIRCLE()
+            self.edges = self.GET_EDGES()
+            self.temp_edges = copy.deepcopy(self.edges)
+            self.temp_grid_position = self.GET_GRID_POSITION()
+            self.neighbours = self.GET_NEIGHBOURS()
+
         self.vertices = copy.deepcopy(self.temp_vertices)
+        self.edges = self.GET_EDGES()
+        self.temp_edges = self.GET_EDGES()
         self.x, self.y, self.r = self.CIRCLE()
         self.temp_x, self.temp_y = self.x, self.y
         self.grid_position = self.GET_GRID_POSITION()
@@ -438,6 +446,11 @@ class Shape():
                 self.temp_vertices[2*i+1] = copy.deepcopy(self.temp_vertices[2*i + 1] + rnd2)
             self.WRAP()
 
+            self.temp_x, self.temp_y, _ = self.CIRCLE()
+            self.temp_edges = self.GET_EDGES()
+            self.temp_grid_position = self.GET_GRID_POSITION()
+            self.neighbours = self.GET_NEIGHBOURS()
+
             if (self.ACCEPT_MOVE() == True):
 
                 self.UPDATE_GRID()
@@ -477,6 +490,10 @@ class Shape():
 
             p2.temp_x, p2.temp_y, _ = p2.CIRCLE()
             self.temp_x, self.temp_y, _ = self.CIRCLE()
+            self.temp_edges = self.GET_EDGES()
+            self.temp_grid_position = self.GET_GRID_POSITION()
+            self.neighbours = self.GET_NEIGHBOURS()
+
 
             r = self.r
             d = 1/self.box.M[self.type]
@@ -500,7 +517,11 @@ class Shape():
             p2.WRAP()
 
             self.temp_x, self.temp_y, _ = self.CIRCLE()
-            p2.temp_x, p2.temp_y, _ = p2.CIRCLE()
+            self.temp_edges = self.GET_EDGES()
+            self.temp_grid_position = self.GET_GRID_POSITION()
+            self.neighbours = self.GET_NEIGHBOURS()
+
+
 
             # rotate self
             angle = np.random.randint(360)
@@ -604,9 +625,18 @@ class Shape():
         # approve move if no overlap found
         return True
 
+
+
+
+
     def __init__(self,box,type):
 
         self.box = box
+        self.type = type
+        self.shape = self.box.shapes[type]
+        self.area = self.box.areas
+
+
 
         self.global_id = len(box.global_id_list)
         self.APPEND_GLOBAL_ID_LIST()
@@ -615,7 +645,7 @@ class Shape():
         self.shape = box.shapes[type]
 
         self.CREATE()
-        self.box.total_area += self.box.type_areas[self.type]
 
+        self.box.total_area += self.box.type_areas[self.type]
         self.ADD_TO_GRID()
         self.ADD_VERTEX_POSITIONS()
